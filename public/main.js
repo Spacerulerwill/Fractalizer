@@ -13,10 +13,10 @@ function httpGet(theUrl)
 }
 
 // Mouse movement data
-var mouseDown = false;
+var mouseDown = false
 const delta = 6
-var startX;
-var startY;
+var startX
+var startY
 var startFractalX
 var startFractalY
 
@@ -77,7 +77,6 @@ function resizeCallback() {
 }
 
 function render() {
-    gl.useProgram(program)
     gl.drawArrays(gl.TRIANGLES, 0, 6)
 }
 
@@ -89,7 +88,6 @@ function resizeCanvas() {
         canvas.style.height = height
         canvas.width = width
         canvas.height = height
-        gl.useProgram(program)
         gl.uniform2i(resolutionLoc, width, height)
     }
   }
@@ -111,31 +109,28 @@ document.addEventListener('wheel', function(event){
     } else {
         zoom = zoom * 0.95
     }
-    gl.useProgram(program)
     gl.uniform1f(zoomLoc, zoom)
     render()
-}, false);
+}, false)
 
 
 window.addEventListener('mousedown', function(event) {
-    mouseDown = true;
-    startX = event.pageX;
-    startY = event.pageY;
+    mouseDown = true
+    startX = event.pageX
+    startY = event.pageY
     startFractalX = fractalX
     startFractalY = fractalY
-});
+})
 
 
 document.addEventListener('mousemove', function(event){
     if(mouseDown) {
-        let diffX = event.pageX - startX;
-        let diffY = event.pageY - startY;
+        let diffX = event.pageX - startX
+        let diffY = event.pageY - startY
 
         if (Math.abs(diffX) > delta || Math.abs(diffY) > delta) {
             fractalX = startFractalX - ((diffX) / screen.width) * 2 * zoom
             fractalY = startFractalY + ((diffY) / screen.height)* zoom
-            console.log(fractalX, fractalY)
-            gl.useProgram(program)
             gl.uniform2f(locationLoc, fractalX, fractalY)
             render()
         }
@@ -143,7 +138,20 @@ document.addEventListener('mousemove', function(event){
 })
 
 window.addEventListener('mouseup', function(event) {
-    mouseDown = false;
-});
+    mouseDown = false
+})
+
+document.addEventListener('keydown', function(event){
+    if (event.key == "r") {
+        fractalX = 0
+        fractalY = 0
+        startFractalX = 0
+        startFractalY = 0
+        zoom = 2.0
+        gl.uniform2f(locationLoc, fractalX, fractalY)
+        gl.uniform1f(zoomLoc, zoom)
+        render()
+    }
+}, false);
 
 main()
