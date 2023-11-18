@@ -2,6 +2,7 @@
 var canvas = document.querySelector("canvas")
 canvas.width = screen.width
 canvas.height = screen.height
+canvas.oncontextmenu = function(e) { e.preventDefault(); e.stopPropagation(); }
 var gl = canvas.getContext("webgl")
 
 function httpGet(theUrl)
@@ -20,14 +21,20 @@ var startY
 var startFractalX
 var startFractalY
 
+// fractal ids
+const mandelbrot = 0
+const burningShip = 1
+const tricorn = 2
+
 // fractal stats
 var fractalX = 0
 var fractalY = 0
 var zoom = 2.0
+var selectedFractal = mandelbrot
 
 // Shader program and webgl data
-var mandelbrot = httpGet("http://localhost:3000/mandelbrot")
-var program, resolutionLoc, locationLoc, zoomLoc
+var shader = httpGet("http://localhost:3000/fractal")
+var program, resolutionLoc, locationLoc, zoomLoc, fractalTypeLoc
 
 const vertexData = [
     -1,-1, 0,
@@ -44,11 +51,11 @@ function setupWebGL() {
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexData), gl.STATIC_DRAW)
 
     const vertexShader = gl.createShader(gl.VERTEX_SHADER)
-    gl.shaderSource(vertexShader, mandelbrot["vertexSource"])
+    gl.shaderSource(vertexShader, shader["vertexSource"])
     gl.compileShader(vertexShader)
 
     const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER)
-    gl.shaderSource(fragmentShader, mandelbrot["fragmentSource"])
+    gl.shaderSource(fragmentShader, shader["fragmentSource"])
     gl.compileShader(fragmentShader)
     console.log(gl.getShaderInfoLog(fragmentShader))
 
@@ -67,8 +74,10 @@ function setupWebGL() {
     resolutionLoc = gl.getUniformLocation(program, "resolution")
     locationLoc = gl.getUniformLocation(program, "location")
     zoomLoc = gl.getUniformLocation(program, "zoom")
+    fractalTypeLoc = gl.getUniformLocation(program, "fractalType")
     gl.uniform2f(locationLoc, fractalX, fractalY)
     gl.uniform1f(zoomLoc, zoom)
+    gl.uniform1i(fractalTypeLoc, selectedFractal)
 }
 
 function resizeCallback() {
@@ -115,11 +124,18 @@ document.addEventListener('wheel', function(event){
 
 
 window.addEventListener('mousedown', function(event) {
-    mouseDown = true
-    startX = event.pageX
-    startY = event.pageY
-    startFractalX = fractalX
-    startFractalY = fractalY
+    if (event.buttons == 1) {
+        mouseDown = true
+        startX = event.pageX
+        startY = event.pageY
+        startFractalX = fractalX
+        startFractalY = fractalY
+    }
+    if (event.buttons == 2) {
+        selectedFractal = (selectedFractal + 1) % 3
+        gl.uniform1i(fractalTypeLoc, selectedFractal)
+        render()
+    }
 })
 
 
@@ -138,7 +154,9 @@ document.addEventListener('mousemove', function(event){
 })
 
 window.addEventListener('mouseup', function(event) {
-    mouseDown = false
+    if (event.button == 0) {
+        mouseDown = false
+    }
 })
 
 document.addEventListener('keydown', function(event){

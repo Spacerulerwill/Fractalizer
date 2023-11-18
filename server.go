@@ -34,7 +34,7 @@ func LoadShaderSource(shader string) shaderSource {
 }
 
 func main() {
-	mandelbrotShader := LoadShaderSource("mandelbrot")
+	fractalShader := LoadShaderSource("fractal")
 
 	r := gin.Default()
 	r.Static("/public", "./public")
@@ -42,8 +42,8 @@ func main() {
 	r.GET("/", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "index.html", gin.H{})
 	})
-	r.GET("/mandelbrot", func(c *gin.Context) {
-		c.IndentedJSON(http.StatusOK, mandelbrotShader)
+	r.GET("/fractal", func(c *gin.Context) {
+		c.IndentedJSON(http.StatusOK, fractalShader)
 	})
 	r.Run(":3000")
 }
