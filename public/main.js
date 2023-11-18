@@ -13,9 +13,12 @@ function httpGet(theUrl)
 }
 
 // Mouse movement data
+var mouseDown = false;
 const delta = 6
-var start;
-var startY
+var startX;
+var startY;
+var startFractalX
+var startFractalY
 
 // fractal stats
 var fractalX = 0
@@ -102,28 +105,6 @@ function main() {
 
 window.addEventListener("resize", resizeCallback)
 
-document.addEventListener('mousedown', function (event) {
-  startX = event.pageX;
-  startY = event.pageY;
-});
-
-document.addEventListener('mouseup', function (event) {
-  const diffX = event.pageX - startX;
-  const diffY = event.pageY - startY;
-
-  if (Math.abs(diffX) < delta && Math.abs(diffY) < delta) {
-    // Click 
-  } else {
-    // Drag
-    fractalX -= (diffX / screen.width) * 2 * zoom
-    fractalY += (diffY / screen.height)* zoom
-    console.log(fractalX, fractalY)
-    gl.useProgram(program)
-    gl.uniform2f(locationLoc, fractalX, fractalY)
-    render()
-  }
-});
-
 document.addEventListener('wheel', function(event){
     if (event.deltaY > 0) {
         zoom = zoom * 1.05
@@ -134,5 +115,35 @@ document.addEventListener('wheel', function(event){
     gl.uniform1f(zoomLoc, zoom)
     render()
 }, false);
+
+
+window.addEventListener('mousedown', function(event) {
+    mouseDown = true;
+    startX = event.pageX;
+    startY = event.pageY;
+    startFractalX = fractalX
+    startFractalY = fractalY
+});
+
+
+document.addEventListener('mousemove', function(event){
+    if(mouseDown) {
+        let diffX = event.pageX - startX;
+        let diffY = event.pageY - startY;
+
+        if (Math.abs(diffX) > delta || Math.abs(diffY) > delta) {
+            fractalX = startFractalX - ((diffX) / screen.width) * 2 * zoom
+            fractalY = startFractalY + ((diffY) / screen.height)* zoom
+            console.log(fractalX, fractalY)
+            gl.useProgram(program)
+            gl.uniform2f(locationLoc, fractalX, fractalY)
+            render()
+        }
+    }
+})
+
+window.addEventListener('mouseup', function(event) {
+    mouseDown = false;
+});
 
 main()
