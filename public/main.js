@@ -1,3 +1,4 @@
+// Setup canvas and webgl
 var canvas = document.querySelector("canvas")
 canvas.width = screen.width
 canvas.height = screen.height
@@ -6,13 +7,23 @@ var gl = canvas.getContext("webgl")
 function httpGet(theUrl)
 {
     var xmlHttp = new XMLHttpRequest()
-    xmlHttp.open( "GET", theUrl, false ) // false for synchronous request
+    xmlHttp.open( "GET", theUrl, false ) // TODO: Make asynchronous
     xmlHttp.send( null )
     return JSON.parse(xmlHttp.responseText)
 }
 
+// Mouse movement data
+const delta = 6
+var start;
+var startY
+
+var fractalX = 0
+var fractalY = 0
+var zoom = 2.0
+
+// Shader program and webgl data
 var mandelbrot = httpGet("http://localhost:3000/mandelbrot")
-var program, resolutionLoc
+var program, resolutionLoc, locationLoc, zoomLoc
 
 const vertexData = [
     -1,-1, 0,
@@ -50,6 +61,10 @@ function setupWebGL() {
 
     gl.useProgram(program)
     resolutionLoc = gl.getUniformLocation(program, "resolution")
+    locationLoc = gl.getUniformLocation(program, "location")
+    zoomLoc = gl.getUniformLocation(program, "zoom")
+    gl.uniform2f(locationLoc, fractalX, fractalY)
+    gl.uniform1f(zoomLoc, zoom)
 }
 
 function resizeCallback() {
@@ -84,5 +99,39 @@ function main() {
     render()
 }
 
-window.addEventListener("resize",resizeCallback)
+window.addEventListener("resize", resizeCallback)
+
+document.addEventListener('mousedown', function (event) {
+  startX = event.pageX;
+  startY = event.pageY;
+});
+
+document.addEventListener('mouseup', function (event) {
+  const diffX = event.pageX - startX;
+  const diffY = event.pageY - startY;
+
+  if (Math.abs(diffX) < delta && Math.abs(diffY) < delta) {
+    // Click 
+  } else {
+    // Drag
+    fractalX -= (diffX / screen.width) * 2 * zoom
+    fractalY += (diffY / screen.height)* zoom
+    console.log(fractalX, fractalY)
+    gl.useProgram(program)
+    gl.uniform2f(locationLoc, fractalX, fractalY)
+    render()
+  }
+});
+
+document.addEventListener('wheel', function(event){
+    if (event.deltaY > 0) {
+        zoom = zoom * 1.05
+    } else {
+        zoom = zoom * 0.95
+    }
+    gl.useProgram(program)
+    gl.uniform1f(zoomLoc, zoom)
+    render()
+}, false);
+
 main()

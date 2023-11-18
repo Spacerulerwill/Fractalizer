@@ -1,9 +1,9 @@
-precision mediump float;
+precision highp float;
 
 uniform ivec2 resolution;
-vec2 location = vec2(0,0);
+uniform vec2 location;
 const int iterations = 200;
-float zoom = 2.0;
+uniform float zoom;
 
 // Square a complex number
 vec2 compsquare(vec2 z)
