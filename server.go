@@ -15,13 +15,13 @@ type shaderSource struct {
 }
 
 func LoadShaderSource(shader string) shaderSource {
-	vertexShaderBytes, err := os.ReadFile(fmt.Sprintf("shaders/%s.vert", shader))
+	vertexShaderBytes, err := os.ReadFile(fmt.Sprintf("shaders/%s.vrx", shader))
 	if err != nil {
 		log.Panic(err)
 	}
 	vertexShaderSource := string(vertexShaderBytes)
 
-	fragmentShaderBytes, err := os.ReadFile(fmt.Sprintf("shaders/%s.frag", shader))
+	fragmentShaderBytes, err := os.ReadFile(fmt.Sprintf("shaders/%s.frg", shader))
 	if err != nil {
 		fmt.Print(err)
 	}

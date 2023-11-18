@@ -17,6 +17,7 @@ const delta = 6
 var start;
 var startY
 
+// fractal stats
 var fractalX = 0
 var fractalY = 0
 var zoom = 2.0
