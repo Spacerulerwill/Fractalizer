@@ -12,7 +12,7 @@ function httpGet(theUrl)
 }
 
 var mandelbrot = httpGet("http://localhost:3000/mandelbrot")
-var program
+var program, resolutionLoc
 
 const vertexData = [
     -1,-1, 0,
@@ -47,6 +47,9 @@ function setupWebGL() {
     gl.enableVertexAttribArray(positionLocation)
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer)
     gl.vertexAttribPointer(positionLocation, 3, gl.FLOAT, false, 0, 0)
+
+    gl.useProgram(program)
+    resolutionLoc = gl.getUniformLocation(program, "resolution")
 }
 
 function resizeCallback() {
@@ -62,9 +65,13 @@ function render() {
 function resizeCanvas() {
     var width = window.innerWidth
     var height = window.innerHeight
-    if (canvas.width != width || canvas.height != height) {
+    if (canvas.style.width != width || canvas.style.height != height) {
         canvas.style.width = width
         canvas.style.height = height
+        canvas.width = width
+        canvas.height = height
+        gl.useProgram(program)
+        gl.uniform2i(resolutionLoc, width, height)
     }
   }
   
