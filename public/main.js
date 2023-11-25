@@ -1,25 +1,25 @@
 // Setup canvas and webgl
-var canvas = document.querySelector("canvas")
+let canvas = document.querySelector("canvas")
 canvas.width = screen.width
 canvas.height = screen.height
 canvas.oncontextmenu = function(e) { e.preventDefault(); e.stopPropagation(); }
-var gl = canvas.getContext("webgl")
+let gl = canvas.getContext("webgl")
 
 function httpGet(theUrl)
 {
-    var xmlHttp = new XMLHttpRequest()
+    let xmlHttp = new XMLHttpRequest()
     xmlHttp.open( "GET", theUrl, false ) // TODO: Make asynchronous
     xmlHttp.send( null )
     return JSON.parse(xmlHttp.responseText)
 }
 
 // Mouse movement data
-var mouseDown = false
+let mouseDown = false
 const delta = 6
-var startX
-var startY
-var startFractalX
-var startFractalY
+let startX
+let startY
+let startFractalX
+let startFractalY
 
 // fractal ids
 const mandelbrot = 0
@@ -27,14 +27,14 @@ const burningShip = 1
 const tricorn = 2
 
 // fractal stats
-var fractalX = 0
-var fractalY = 0
-var zoom = 2.0
-var selectedFractal = mandelbrot
+let fractalX = 0
+let fractalY = 0
+let zoom = 2.0
+let selectedFractal = mandelbrot
 
 // Shader program and webgl data
-var shader = httpGet("http://localhost:3000/fractal")
-var program, resolutionLoc, locationLoc, zoomLoc, fractalTypeLoc
+let shader = httpGet("http://localhost:3000/fractal")
+let program, resolutionLoc, locationLoc, zoomLoc, fractalTypeLoc
 
 const vertexData = [
     -1,-1, 0,
@@ -90,8 +90,8 @@ function render() {
 }
 
 function resizeCanvas() {
-    var width = window.innerWidth
-    var height = window.innerHeight
+    let width = window.innerWidth
+    let height = window.innerHeight
     if (canvas.style.width != width || canvas.style.height != height) {
         canvas.style.width = width
         canvas.style.height = height
@@ -123,6 +123,13 @@ document.addEventListener('wheel', function(event){
 }, false)
 
 
+
+const renderFractal = () => { 
+    console.log(selectedFractal)
+    gl.uniform1i(fractalTypeLoc, selectedFractal)
+    render()
+}
+
 window.addEventListener('mousedown', function(event) {
     if (event.buttons == 1) {
         mouseDown = true
@@ -133,8 +140,7 @@ window.addEventListener('mousedown', function(event) {
     }
     if (event.buttons == 2) {
         selectedFractal = (selectedFractal + 1) % 3
-        gl.uniform1i(fractalTypeLoc, selectedFractal)
-        render()
+        renderFractal()
     }
 })
 
@@ -171,5 +177,15 @@ document.addEventListener('keydown', function(event){
         render()
     }
 }, false);
+
+const buttons = document.getElementsByClassName("button")
+
+for (let i = 0; i < buttons.length; i++) {
+    buttons[i].addEventListener("click", () => { 
+    selectedFractal = i
+    renderFractal()
+    })
+}
+
 
 main()

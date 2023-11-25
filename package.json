@@ -1,0 +1,14 @@
+{
+  "name": "fractalizer",
+  "version": "1.0.0",
+  "description": "fractal website",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm run dev"
+  },
+  "author": "spacerulerwill",
+  "license": "ISC",
+  "devDependencies": {
+    "tailwindcss": "^3.3.5"
+  }
+}
