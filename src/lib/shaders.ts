@@ -1,5 +1,11 @@
-precision mediump float;
+export const vertexShaderSource = `
+  attribute vec3 position;
+  void main() {
+    gl_Position = vec4(position, 1.0);
+  }
+`;
 
+export const fragmentShaderSource = `precision mediump float;
 uniform ivec2 resolution;
 uniform vec2 location;
 uniform int fractalType;
@@ -54,10 +60,11 @@ int fractal(vec2 offset) {
 
 void main() {
     // Anti-aliasing
-    vec3 fragColor = vec3(float(fractal(vec2(0,0))) / float(iterations));
+    vec3 fragColor = vec3(float(fractal(vec2(0.0,0))) / float(iterations));
     fragColor += vec3(float(fractal(vec2(0.5,0))) / float(iterations));
     fragColor += vec3(float(fractal(vec2(0,0.5))) / float(iterations));
     fragColor += vec3(float(fractal(vec2(0.5,0.5))) / float(iterations));
     fragColor /= 4.0;
     gl_FragColor = vec4(fragColor, 1.0);
 }
+`;
