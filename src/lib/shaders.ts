@@ -60,7 +60,7 @@ int fractal(vec2 offset) {
 
 void main() {
     // Anti-aliasing
-    vec3 fragColor = vec3(float(fractal(vec2(0,0))) / float(iterations));
+    vec3 fragColor = vec3(float(fractal(vec2(0.0,0))) / float(iterations));
     fragColor += vec3(float(fractal(vec2(0.5,0))) / float(iterations));
     fragColor += vec3(float(fractal(vec2(0,0.5))) / float(iterations));
     fragColor += vec3(float(fractal(vec2(0.5,0.5))) / float(iterations));

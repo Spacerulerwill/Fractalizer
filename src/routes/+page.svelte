@@ -35,6 +35,18 @@
 		-1, 1, 0,
   ];
 
+  const getScreenshot = async () => {
+    if (programInfo.gl) {
+      programInfo.gl.drawArrays(programInfo.gl.TRIANGLES, 0, 6);
+      canvas.toBlob((blob) => {
+        if (blob) {
+          const imageData = URL.createObjectURL(blob);
+          navigator.clipboard.writeText(imageData);
+        }
+      });
+    }
+  };
+
   const changeFractal = (index: number) => {
     selectedFractal = index;
   };
@@ -136,4 +148,11 @@
 />
 
 <canvas bind:this={canvas} />
-<Menu {changeFractal} {zoom} {fractalX} {fractalY} {selectedFractal} />
+<Menu
+  {changeFractal}
+  {zoom}
+  {fractalX}
+  {fractalY}
+  {selectedFractal}
+  {getScreenshot}
+/>
