@@ -1,9 +1,9 @@
 // Setup canvas and webgl
-let canvas = document.querySelector("canvas")
+const canvas = document.querySelector("canvas")
 canvas.width = screen.width
 canvas.height = screen.height
 canvas.oncontextmenu = function(e) { e.preventDefault(); e.stopPropagation(); }
-let gl = canvas.getContext("webgl")
+const gl = canvas.getContext("webgl")
 
 function httpGet(theUrl)
 {
@@ -33,7 +33,79 @@ let zoom = 2.0
 let selectedFractal = mandelbrot
 
 // Shader program and webgl data
-let shader = httpGet("http://localhost:3000/fractal")
+const vertexShaderSource = `precision mediump float;
+
+attribute vec3 position;
+
+void main() {
+    gl_Position = vec4(position, 1);
+}
+`
+
+const fragmentShaderSource = `precision mediump float;
+
+uniform ivec2 resolution;
+uniform vec2 location;
+uniform int fractalType;
+const int iterations = 200;
+uniform float zoom;
+
+const int mandelbrot = 0;
+const int burningship = 1;
+const int tricorn = 2;
+
+// Square a complex number
+vec2 compsquare(vec2 z)
+{
+    if (fractalType == mandelbrot) {
+        float temp = z.x;
+        z.x = z.x * z.x - z.y * z.y;
+        z.y = 2.0 * temp * z.y;        
+    }
+    else if (fractalType == burningship) {
+        float temp = abs(z.x);
+        z.x = abs(z.x * z.x) - abs(z.y * z.y);
+        z.y = 2.0 * temp * abs(z.y);  
+    }
+    else if (fractalType == tricorn) {
+        z.y *= -1.0;
+        float temp = z.x;
+        z.x = z.x * z.x - z.y * z.y;
+        z.y = 2.0 * temp * z.y;  
+    }
+    return z;
+}
+
+// Calculate mandelbrot for a point
+int fractal(vec2 offset) {
+    vec2 uv = (gl_FragCoord.xy + offset) / vec2(resolution);
+    float ratio = float(resolution.x) / float(resolution.y);
+    uv.x *= ratio;
+    uv -= vec2(0.5 * ratio, 0.5);
+    uv *= zoom; //zoom
+    uv += location; // position
+    uv.y *= -1.0;
+
+    vec2 z = vec2(0.0);
+    //calculate iterationts until it escapes
+    for (int iters = 0; iters < iterations; ++iters)
+    {
+        z = compsquare(z) + uv;
+        if (dot(z, z) > 4.0) return iters;
+    }
+    return iterations;
+}
+
+void main() {
+    // Anti-aliasing
+    vec3 fragColor = vec3(float(fractal(vec2(0,0))) / float(iterations));
+    fragColor += vec3(float(fractal(vec2(0.5,0))) / float(iterations));
+    fragColor += vec3(float(fractal(vec2(0,0.5))) / float(iterations));
+    fragColor += vec3(float(fractal(vec2(0.5,0.5))) / float(iterations));
+    fragColor /= 4.0;
+    gl_FragColor = vec4(fragColor, 1.0);
+}
+`
 let program, resolutionLoc, locationLoc, zoomLoc, fractalTypeLoc
 
 const vertexData = [
@@ -51,11 +123,11 @@ function setupWebGL() {
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexData), gl.STATIC_DRAW)
 
     const vertexShader = gl.createShader(gl.VERTEX_SHADER)
-    gl.shaderSource(vertexShader, shader["vertexSource"])
+    gl.shaderSource(vertexShader, vertexShaderSource)
     gl.compileShader(vertexShader)
 
     const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER)
-    gl.shaderSource(fragmentShader, shader["fragmentSource"])
+    gl.shaderSource(fragmentShader, fragmentShaderSource)
     gl.compileShader(fragmentShader)
     console.log(gl.getShaderInfoLog(fragmentShader))
 
@@ -89,17 +161,7 @@ function render() {
     gl.drawArrays(gl.TRIANGLES, 0, 6)
 }
 
-function resizeCanvas() {
-    let width = window.innerWidth
-    let height = window.innerHeight
-    if (canvas.style.width != width || canvas.style.height != height) {
-        canvas.style.width = width
-        canvas.style.height = height
-        canvas.width = width
-        canvas.height = height
-        gl.uniform2i(resolutionLoc, width, height)
-    }
-  }
+
   
 function main() {
     if (!gl) {
@@ -180,12 +242,26 @@ document.addEventListener('keydown', function(event){
 
 const buttons = document.getElementsByClassName("button")
 
+const cycleBackgroundColor = (index) => { 
+    for (let i = 0; i < buttons.length; i++) {
+        if (i != index) {
+            buttons[i].classList.remove("text-blue-500")
+            buttons[i].classList.add("text-white")
+        } else { 
+            buttons[i].classList.add("text-blue-500")
+            buttons[i].classList.remove("text-white")
+        }
+}
+}
+
 for (let i = 0; i < buttons.length; i++) {
     buttons[i].addEventListener("click", () => { 
     selectedFractal = i
+    cycleBackgroundColor(i)
     renderFractal()
     })
 }
-
+buttons[0].classList.remove("text-white")
+buttons[0].classList.add("text-blue-500")
 
 main()
