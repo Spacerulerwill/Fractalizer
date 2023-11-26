@@ -4,4 +4,10 @@ export interface ProgramInfo {
     resolutionLoc: WebGLUniformLocation | null;
     locationLoc: WebGLUniformLocation | null;
     fractalTypeLoc: WebGLUniformLocation | null;
-  }
+}
+  
+export enum Fractals { 
+  'Mandelbrot' = 0,
+  'Burning Ship' = 1,
+ 'Tricorn' = 2,
+}

@@ -1,8 +1,9 @@
 <script lang="ts">
-  import type { ProgramInfo } from "$lib/interfaces";
+  import { Fractals, type ProgramInfo } from "$lib/interfaces";
   import { initialiseWebGL } from "$lib/openGL";
   import { fragmentShaderSource, vertexShaderSource } from "$lib/shaders";
   import { onMount } from "svelte";
+  import Menu from "../components/menu.svelte";
 
   let programInfo: ProgramInfo;
   let canvas: HTMLCanvasElement;
@@ -18,16 +19,11 @@
   let windowWidth: number;
   let windowHeight: number;
 
-  // fractal ids
-  const mandelbrot = 0;
-  const burningShip = 1;
-  const tricorn = 2;
-
   // fractal stats
   let fractalX = 0;
   let fractalY = 0;
-  let zoom = 3.0;
-  let selectedFractal = mandelbrot;
+  let zoom = 2.0;
+  let selectedFractal = Fractals.Mandelbrot;
 
   // prettier-ignore
   const vertexData = [
@@ -38,6 +34,10 @@
 		1, 1, 0, 
 		-1, 1, 0,
   ];
+
+  const changeFractal = (index: number) => {
+    selectedFractal = index;
+  };
 
   const handleKeyDown = (event: KeyboardEvent) => {
     if (event.key == "r") {
@@ -56,6 +56,11 @@
       zoom = zoom * 0.95;
     }
   };
+
+  const handleMouseUp = (event: MouseEvent) => {
+    mouseDown = false;
+  };
+
   const handleMouseMove = (event: MouseEvent) => {
     if (mouseDown) {
       let diffX = event.pageX - startX;
@@ -66,6 +71,7 @@
       }
     }
   };
+
   const handleMouseDown = (event: MouseEvent) => {
     if (event.buttons == 1) {
       mouseDown = true;
@@ -75,6 +81,7 @@
       startFractalY = fractalY;
     }
     if (event.buttons == 2) {
+      event.preventDefault();
       selectedFractal = (selectedFractal + 1) % 3;
     }
   };
@@ -88,6 +95,7 @@
     );
   });
 
+  //reacts to changes in variables which are used as uniforms
   $: {
     if (programInfo && programInfo.gl && canvas.width && canvas.height) {
       programInfo.gl.uniform2f(programInfo.locationLoc, fractalX, fractalY);
@@ -97,6 +105,7 @@
     }
   }
 
+  //reacts to changes in window size and height
   $: {
     if (
       programInfo &&
@@ -117,7 +126,7 @@
 </script>
 
 <svelte:window
-  on:mouseup={() => (mouseDown = false)}
+  on:mouseup={handleMouseUp}
   on:mousedown={handleMouseDown}
   on:mousemove={handleMouseMove}
   bind:innerWidth={windowWidth}
@@ -126,24 +135,5 @@
   on:keydown={handleKeyDown}
 />
 
-<div>
-  <canvas bind:this={canvas} />
-  <div class="w-full h-full absolute bottom-0">
-    <button
-      class="text-xl"
-      on:click={() => {
-        selectedFractal = tricorn;
-      }}
-    >
-      johncook
-    </button>
-    <button
-      class="text-xl"
-      on:click={() => {
-        selectedFractal = burningShip;
-      }}
-    >
-      johncook
-    </button>
-  </div>
-</div>
+<canvas bind:this={canvas} />
+<Menu {changeFractal} {zoom} {fractalX} {fractalY} {selectedFractal} />
