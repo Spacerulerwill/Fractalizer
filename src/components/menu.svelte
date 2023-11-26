@@ -13,6 +13,7 @@
   export let fractalX: number;
   export let fractalY: number;
   export let getScreenshot: () => void;
+  export let saveImage: () => void;
 
   const length = Object.keys(Fractals).length / 2;
 </script>
@@ -44,7 +45,7 @@
       </button>
     {/each}
     <svg
-      on:click={getScreenshot}
+      on:click={saveImage}
       class="w-20 h-20 text-gray-800 dark:text-white"
       aria-hidden="true"
       xmlns="http://www.w3.org/2000/svg"
