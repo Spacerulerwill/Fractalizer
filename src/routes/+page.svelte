@@ -1,12 +1,13 @@
 <script lang="ts">
-  import { Fractals, type ProgramInfo } from "$lib/interfaces";
+  import { FractalCount, Fractals, type ProgramInfo } from "$lib/interfaces";
   import { initialiseWebGL } from "$lib/openGL";
   import { fragmentShaderSource, vertexShaderSource } from "$lib/shaders";
-  import { Toast, clipboard, type ToastSettings } from "@skeletonlabs/skeleton";
+  import { Toast, type ToastSettings } from "@skeletonlabs/skeleton";
   import { onMount } from "svelte";
   import Menu from "../components/menu.svelte";
 
   import { getToastStore } from "@skeletonlabs/skeleton";
+  import { page } from '$app/stores';
 
   const toastStore = getToastStore();
 
@@ -25,44 +26,86 @@
   let windowHeight: number;
 
   // fractal stats
-  let fractalX = 0;
-  let fractalY = 0;
-  let zoom = 2.0;
-  let selectedFractal = Fractals.Mandelbrot;
+  let fractalX: number;
+  let fractalY: number;
+  let zoom: number;
+  let selectedFractal: Fractals;
+  
+  // TODO: Can probably make a generic function for this...
+  // url parameter parsing
+  {
+    // parse fractal type parameter
+    const urlFractal = $page.url.searchParams.get('fractal');
+    if (urlFractal === null) {
+        selectedFractal = 0;
+    } else {
+        const parsedUrlFractal = parseInt(urlFractal, 10)
+        if (isNaN(parsedUrlFractal)) {
+            selectedFractal = 0;
+        } else {
+            if (parsedUrlFractal < 0 || parsedUrlFractal > FractalCount-1) {
+                selectedFractal = 0;
+            } else {
+                selectedFractal = parsedUrlFractal;
+            }
+        }
+    }
+
+    // parse x coordinate parameter
+    const urlX = $page.url.searchParams.get('x');
+    if (urlX === null) {
+        fractalX = 0.0;
+    } else {
+        const parsedUrlX = parseFloat(urlX)
+        if (isNaN(parsedUrlX)) {
+            fractalX = 0.0;
+        } else {
+            fractalX = parsedUrlX;
+        }
+    }
+
+    // parse y coordinate paremeter
+    const urlY = $page.url.searchParams.get('y');
+    if (urlY === null) {
+        fractalY = 0.0;
+    } else {
+        const parsedUrlY = parseFloat(urlY)
+        if (isNaN(parsedUrlY)) {
+            fractalY = 0.0;
+        } else {
+            fractalY = parsedUrlY;
+        }
+    }
+
+    // parse zoom parameter
+    const urlZoom = $page.url.searchParams.get("zoom");
+    if (urlZoom === null) {
+        zoom = 2.0;
+    } else {
+        const parsedUrlZoom = parseFloat(urlZoom)
+        if (isNaN(parsedUrlZoom)) {
+            zoom = 2.0;
+        } else {
+            zoom = parsedUrlZoom;
+        }
+    }
+  }
 
   // prettier-ignore
   const vertexData = [
-    -1, -1, 0, 
-		1, -1, 0, 
-		1, 1, 0, 
+        -1, -1, 0, 
+		 1, -1, 0, 
+		 1,  1, 0, 
 		-1, -1, 0, 
-		1, 1, 0, 
-		-1, 1, 0,
+		 1,  1, 0, 
+		-1,  1, 0,
   ];
 
   const toast: ToastSettings = {
     message: "Saved image to downloads!",
     timeout: 1500,
   };
-  // const getScreenshot = async () => {
-  //   if (programInfo.gl) {
-  //     programInfo.gl.drawArrays(programInfo.gl.TRIANGLES, 0, 6);
-  //     canvas.toBlob((blob) => {
-  //       if (blob) {
-  //         const imageData1 = URL.createObjectURL(blob);
 
-  //         const reader = new FileReader();
-  //         reader.readAsDataURL(blob);
-  //         reader.onloadend = function () {
-  //           if (reader.result) {
-  //             const value = String(reader.result);
-  //             navigator.clipboard.writeText(value);
-  //           }
-  //         };
-  //       }
-  //     });
-  //   }
-  // };
   const saveImage = async () => {
     if (programInfo.gl) {
       programInfo.gl.drawArrays(programInfo.gl.TRIANGLES, 0, 6);

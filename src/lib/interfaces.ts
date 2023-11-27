@@ -9,5 +9,9 @@ export interface ProgramInfo {
 export enum Fractals { 
   'Mandelbrot' = 0,
   'Burning Ship' = 1,
- 'Tricorn' = 2,
+  'Tricorn' = 2,
 }
+
+// TODO: is there a way to programmatically determine this?
+const FractalCount = 3;
+export { FractalCount };
