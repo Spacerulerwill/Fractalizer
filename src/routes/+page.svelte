@@ -2,8 +2,13 @@
   import { Fractals, type ProgramInfo } from "$lib/interfaces";
   import { initialiseWebGL } from "$lib/openGL";
   import { fragmentShaderSource, vertexShaderSource } from "$lib/shaders";
+  import { Toast, clipboard, type ToastSettings } from "@skeletonlabs/skeleton";
   import { onMount } from "svelte";
   import Menu from "../components/menu.svelte";
+
+  import { getToastStore } from "@skeletonlabs/skeleton";
+
+  const toastStore = getToastStore();
 
   let programInfo: ProgramInfo;
   let canvas: HTMLCanvasElement;
@@ -35,13 +40,47 @@
 		-1, 1, 0,
   ];
 
-  const getScreenshot = async () => {
+  const toast: ToastSettings = {
+    message: "Saved image to downloads!",
+    timeout: 1500,
+  };
+  // const getScreenshot = async () => {
+  //   if (programInfo.gl) {
+  //     programInfo.gl.drawArrays(programInfo.gl.TRIANGLES, 0, 6);
+  //     canvas.toBlob((blob) => {
+  //       if (blob) {
+  //         const imageData1 = URL.createObjectURL(blob);
+
+  //         const reader = new FileReader();
+  //         reader.readAsDataURL(blob);
+  //         reader.onloadend = function () {
+  //           if (reader.result) {
+  //             const value = String(reader.result);
+  //             navigator.clipboard.writeText(value);
+  //           }
+  //         };
+  //       }
+  //     });
+  //   }
+  // };
+  const saveImage = async () => {
     if (programInfo.gl) {
       programInfo.gl.drawArrays(programInfo.gl.TRIANGLES, 0, 6);
       canvas.toBlob((blob) => {
         if (blob) {
           const imageData = URL.createObjectURL(blob);
-          navigator.clipboard.writeText(imageData);
+
+          const currentDate = new Date().toLocaleDateString();
+          //creates an invisible document element to trigger a download which gets auto clicked
+          const a = document.createElement("a");
+          a.style.display = "none";
+          a.href = imageData;
+          a.download = `Fractilizer_${currentDate}_${Fractals[selectedFractal]}.png`;
+          document.body.append(a);
+          a.click();
+          a.remove();
+
+          toastStore.trigger(toast);
         }
       });
     }
@@ -67,6 +106,10 @@
     } else {
       zoom = zoom * 0.95;
     }
+  };
+
+  const handleContextMenu = (event: MouseEvent) => {
+    event.preventDefault();
   };
 
   const handleMouseUp = (event: MouseEvent) => {
@@ -137,7 +180,10 @@
   }
 </script>
 
+<Toast />
+
 <svelte:window
+  on:contextmenu={handleContextMenu}
   on:mouseup={handleMouseUp}
   on:mousedown={handleMouseDown}
   on:mousemove={handleMouseMove}
@@ -154,5 +200,5 @@
   {fractalX}
   {fractalY}
   {selectedFractal}
-  {getScreenshot}
+  {saveImage}
 />
