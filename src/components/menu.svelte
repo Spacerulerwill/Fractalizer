@@ -19,12 +19,12 @@
       href="https://github.com/Spacerulerwill/Fractalizer"
       class="h1 hover:animate-pulse"
     >
-      <span class="gradient-heading">Fractilizer V1.0</span>
+      <span class="gradient-heading">Fractilizer</span>
     </a>
     <p class="gradient-heading">{Fractals[selectedFractal]}</p>
-    <p class="gradient-heading">Zoom: {zoom.toFixed(2)}</p>
-    <p class="gradient-heading">X: {fractalX.toFixed(2)}</p>
-    <p class="gradient-heading">Y: {fractalY.toFixed(2)}</p>
+    <p class="gradient-heading">Zoom: {(1.0 / zoom).toPrecision(2)}</p>
+    <p class="gradient-heading">X: {fractalX.toPrecision(2)}</p>
+    <p class="gradient-heading">Y: {fractalY.toPrecision(2)}</p>
   </nav>
   <div class="flex gap-2 items-center h-fit">
     <svg
