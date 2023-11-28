@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Fractals } from "$lib/interfaces";
-  import { RadioGroup } from "@skeletonlabs/skeleton";
+  import Dropdown from "./dropdown.svelte";
 
   export let changeFractal: (fractal: number) => void;
   export let selectedFractal: number;
@@ -9,8 +9,6 @@
   export let fractalY: number;
   // export let getScreenshot: () => void;
   export let saveImage: () => void;
-
-  const length = Object.keys(Fractals).length / 2;
 </script>
 
 <menu class="w-screen h-screen absolute bottom-0 select-none flex">
@@ -25,6 +23,7 @@
     <p class="gradient-heading">Zoom: {(1.0 / zoom).toPrecision(2)}</p>
     <p class="gradient-heading">X: {fractalX.toPrecision(2)}</p>
     <p class="gradient-heading">Y: {fractalY.toPrecision(2)}</p>
+    <Dropdown {selectedFractal} {changeFractal} />
   </nav>
   <div class="flex gap-2 items-center h-fit">
     <svg
@@ -50,20 +49,5 @@
         d="M17 3h-2l-.447-.894A2 2 0 0 0 12.764 1H7.236a2 2 0 0 0-1.789 1.106L5 3H3a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V5a2 2 0 0 0-2-2Z"
       />
     </svg>
-    <RadioGroup
-      hover="true"
-      rounded="rounded-container-token"
-      display="flex-col"
-    >
-      {#each { length: length } as _, index (index)}
-        <option
-          class={selectedFractal === index ? "variant-ghost-primary" : null}
-          value={index}
-          on:click={() => changeFractal(index)}
-        >
-          {Fractals[index]}
-        </option>
-      {/each}
-    </RadioGroup>
   </div>
 </menu>
