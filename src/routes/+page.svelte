@@ -2,14 +2,21 @@
   import { FractalCount, Fractals, type ProgramInfo } from "$lib/interfaces";
   import { initialiseWebGL } from "$lib/openGL";
   import { fragmentShaderSource, vertexShaderSource } from "$lib/shaders";
-  import { Toast, type ToastSettings } from "@skeletonlabs/skeleton";
   import { onMount } from "svelte";
   import Menu from "../components/menu.svelte";
 
-  import { getToastStore } from "@skeletonlabs/skeleton";
-  import { page } from '$app/stores';
+  import { page } from "$app/stores";
+
+  import {
+    getModalStore,
+    getToastStore,
+    type ModalSettings,
+    type ToastSettings,
+  } from "@skeletonlabs/skeleton";
 
   const toastStore = getToastStore();
+
+  const modalStore = getModalStore();
 
   let programInfo: ProgramInfo;
   let canvas: HTMLCanvasElement;
@@ -38,64 +45,66 @@
   let zoom: number;
   let selectedFractal: Fractals;
   let juliaSetModeEnabled = $page.url.searchParams.has("julia");
-  
+
+  let menuOpen = false;
+
   // TODO: Can probably make a generic function for this...
   // url parameter parsing
   {
     // parse fractal type parameter
-    const urlFractal = $page.url.searchParams.get('fractal');
+    const urlFractal = $page.url.searchParams.get("fractal");
     if (urlFractal === null) {
-        selectedFractal = 0;
+      selectedFractal = 0;
     } else {
-        const parsedUrlFractal = parseInt(urlFractal, 10)
-        if (isNaN(parsedUrlFractal)) {
-            selectedFractal = 0;
+      const parsedUrlFractal = parseInt(urlFractal, 10);
+      if (isNaN(parsedUrlFractal)) {
+        selectedFractal = 0;
+      } else {
+        if (parsedUrlFractal < 0 || parsedUrlFractal > FractalCount - 1) {
+          selectedFractal = 0;
         } else {
-            if (parsedUrlFractal < 0 || parsedUrlFractal > FractalCount-1) {
-                selectedFractal = 0;
-            } else {
-                selectedFractal = parsedUrlFractal;
-            }
+          selectedFractal = parsedUrlFractal;
         }
+      }
     }
 
     // parse x coordinate parameter
-    const urlX = $page.url.searchParams.get('x');
+    const urlX = $page.url.searchParams.get("x");
     if (urlX === null) {
-        fractalX = 0.0;
+      fractalX = 0.0;
     } else {
-        const parsedUrlX = parseFloat(urlX)
-        if (isNaN(parsedUrlX)) {
-            fractalX = 0.0;
-        } else {
-            fractalX = parsedUrlX;
-        }
+      const parsedUrlX = parseFloat(urlX);
+      if (isNaN(parsedUrlX)) {
+        fractalX = 0.0;
+      } else {
+        fractalX = parsedUrlX;
+      }
     }
 
     // parse y coordinate paremeter
-    const urlY = $page.url.searchParams.get('y');
+    const urlY = $page.url.searchParams.get("y");
     if (urlY === null) {
-        fractalY = 0.0;
+      fractalY = 0.0;
     } else {
-        const parsedUrlY = parseFloat(urlY)
-        if (isNaN(parsedUrlY)) {
-            fractalY = 0.0;
-        } else {
-            fractalY = parsedUrlY;
-        }
+      const parsedUrlY = parseFloat(urlY);
+      if (isNaN(parsedUrlY)) {
+        fractalY = 0.0;
+      } else {
+        fractalY = parsedUrlY;
+      }
     }
 
     // parse zoom parameter
     const urlZoom = $page.url.searchParams.get("zoom");
     if (urlZoom === null) {
-        zoom = 2.0;
+      zoom = 2.0;
     } else {
-        const parsedUrlZoom = parseFloat(urlZoom)
-        if (isNaN(parsedUrlZoom)) {
-            zoom = 2.0;
-        } else {
-            zoom = parsedUrlZoom;
-        }
+      const parsedUrlZoom = parseFloat(urlZoom);
+      if (isNaN(parsedUrlZoom)) {
+        zoom = 2.0;
+      } else {
+        zoom = parsedUrlZoom;
+      }
     }
   }
 
@@ -112,6 +121,50 @@
   const toast: ToastSettings = {
     message: "Saved image to downloads!",
     timeout: 1500,
+  };
+
+  const modal: ModalSettings = {
+    type: "alert",
+    title: "share link",
+    body: "",
+  };
+
+  const closeMenu = () => {
+    menuOpen = false;
+  };
+
+  const shareFractal = () => {
+    menuOpen = true;
+
+    const host = $page.url.host;
+    const url =
+      host +
+      `?zoom=${zoom}&fractal=${selectedFractal}&x=${fractalX}&y=${fractalY}`;
+
+    if (programInfo.gl) {
+      programInfo.gl.drawArrays(programInfo.gl.TRIANGLES, 0, 6);
+      canvas.toBlob((blob) => {
+        if (blob) {
+          const imageData = URL.createObjectURL(blob);
+
+          const modal: ModalSettings = {
+            type: "component",
+            component: "shareModal",
+            meta: {
+              url: url,
+              image: imageData,
+              title: Fractals[selectedFractal],
+              closeFunction: closeMenu,
+            },
+            response: () => {
+              closeMenu();
+            },
+          };
+
+          modalStore.trigger(modal);
+        }
+      });
+    }
   };
 
   const saveImage = async () => {
@@ -144,21 +197,25 @@
   const handleKeyDown = (event: KeyboardEvent) => {
     switch (event.key) {
         case 'r':
-            fractalX = 0;
-            fractalY = 0;
-            startFractalX = 0;
-            startFractalY = 0;
-            zoom = 2.0;
+            if (menuOpen === false) {
+                fractalX = 0;
+                fractalY = 0;
+                startFractalX = 0;
+                startFractalY = 0;
+                zoom = 2.0;
+            }
         case 'j':
             juliaSetModeEnabled = !juliaSetModeEnabled;
     }
   };
 
   const changeZoom = (event: WheelEvent) => {
-    if (event.deltaY > 0) {
-      zoom *= 1.05;
-    } else {
-      zoom *= 0.95;
+    if (menuOpen === false) {
+      if (event.deltaY > 0) {
+        zoom = zoom * 1.05;
+      } else {
+        zoom = zoom * 0.95;
+      }
     }
   };
 
@@ -174,7 +231,7 @@
     if (juliaSetModeEnabled) {
         mouseReal = event.pageX * ((maxReal - minReal) / windowWidth) + minReal;
         mouseImag = event.pageY * ((maxImag - minImag) / windowHeight)+ minImag;
-    } else if (mouseDown) {
+    } else if (mouseDown && menuOpen === false) {
         let diffX = event.pageX - startX;
         let diffY = event.pageY - startY;
         if (Math.abs(diffX) > delta || Math.abs(diffY) > delta) {
@@ -184,17 +241,46 @@
     }
   };
 
-  const handleMouseDown = (event: MouseEvent) => {
-    if (event.buttons == 1) {
+  const handleTouchUp = (event: TouchEvent) => {
+    mouseDown = false;
+  };
+
+  const handleTouchMove = (event: TouchEvent) => {
+    if (menuOpen === false) {
+      if (mouseDown) {
+        let diffX = event.touches[0].clientX - startX;
+        let diffY = event.touches[0].clientY - startY;
+        if (Math.abs(diffX) > delta || Math.abs(diffY) > delta) {
+          fractalX = startFractalX - (diffX / screen.width) * zoom;
+          fractalY = startFractalY + (diffY / screen.height) * zoom;
+        }
+      }
+    }
+  };
+
+  const handleTouchDown = (event: TouchEvent) => {
+    if (menuOpen === false) {
       mouseDown = true;
-      startX = event.pageX;
-      startY = event.pageY;
+      startX = event.touches[0].clientX;
+      startY = event.touches[0].clientY;
       startFractalX = fractalX;
       startFractalY = fractalY;
     }
-    if (event.buttons == 2) {
-      event.preventDefault();
-      selectedFractal = (selectedFractal + 1) % FractalCount;
+  };
+
+  const handleMouseDown = (event: MouseEvent) => {
+    if (menuOpen === false) {
+      if (event.buttons === 1) {
+        mouseDown = true;
+        startX = event.pageX;
+        startY = event.pageY;
+        startFractalX = fractalX;
+        startFractalY = fractalY;
+      }
+      if (event.buttons === 2) {
+        event.preventDefault();
+        selectedFractal = (selectedFractal + 1) % FractalCount;
+      }
     }
   };
 
@@ -245,9 +331,10 @@
   }
 </script>
 
-<Toast />
-
 <svelte:window
+  on:touchstart={handleTouchDown}
+  on:touchmove={handleTouchMove}
+  on:touchcancel={handleTouchUp}
   on:contextmenu={handleContextMenu}
   on:mouseup={handleMouseUp}
   on:mousedown={handleMouseDown}
@@ -260,6 +347,7 @@
 
 <canvas bind:this={canvas} />
 <Menu
+  {shareFractal}
   {changeFractal}
   {zoom}
   {fractalX}
