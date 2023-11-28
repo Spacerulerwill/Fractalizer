@@ -53,8 +53,10 @@ export const initialiseWebGL: InitFunction = (canvas,vertexShaderSource,fragment
   gl.useProgram(program);
   const resolutionLoc = gl.getUniformLocation(program, "resolution");
   const locationLoc = gl.getUniformLocation(program, "location");
+  const mousePosLoc = gl.getUniformLocation(program, "mousePos")
   const zoomLoc = gl.getUniformLocation(program, "zoom");
   const fractalTypeLoc = gl.getUniformLocation(program, "fractalType");
+  const juliaSetModeEnabledLoc = gl.getUniformLocation(program, "isJuliaModeEnabled")
 
-  return {gl,zoomLoc,locationLoc,resolutionLoc,fractalTypeLoc}
+  return {gl,zoomLoc,locationLoc,mousePosLoc, resolutionLoc,fractalTypeLoc,juliaSetModeEnabledLoc}
 }
