@@ -2,18 +2,17 @@
   import { FractalCount, Fractals, type ProgramInfo } from "$lib/interfaces";
   import { initialiseWebGL } from "$lib/openGL";
   import { fragmentShaderSource, vertexShaderSource } from "$lib/shaders";
-  import {
-    Modal,
-    Toast,
-    type ModalSettings,
-    type ToastSettings,
-  } from "@skeletonlabs/skeleton";
   import { onMount } from "svelte";
   import Menu from "../components/menu.svelte";
 
   import { page } from "$app/stores";
 
-  import { getModalStore, getToastStore } from "@skeletonlabs/skeleton";
+  import {
+    getModalStore,
+    getToastStore,
+    type ModalSettings,
+    type ToastSettings,
+  } from "@skeletonlabs/skeleton";
 
   const toastStore = getToastStore();
 
@@ -38,6 +37,12 @@
   let fractalY: number;
   let zoom: number;
   let selectedFractal: Fractals;
+
+  let menuOpen = false;
+
+  $: {
+    console.log(menuOpen);
+  }
 
   // TODO: Can probably make a generic function for this...
   // url parameter parsing
@@ -120,7 +125,13 @@
     body: "",
   };
 
+  const closeMenu = () => {
+    menuOpen = false;
+  };
+
   const shareFractal = () => {
+    menuOpen = true;
+
     const host = $page.url.host;
     const url =
       host +
@@ -133,10 +144,17 @@
           const imageData = URL.createObjectURL(blob);
 
           const modal: ModalSettings = {
-            type: "alert",
-            title: "Share current fractal!",
-            body: url,
-            image: imageData,
+            type: "component",
+            component: "shareModal",
+            meta: {
+              url: url,
+              image: imageData,
+              title: Fractals[selectedFractal],
+              closeFunction: closeMenu,
+            },
+            response: () => {
+              closeMenu();
+            },
           };
 
           modalStore.trigger(modal);
@@ -173,20 +191,24 @@
   };
 
   const handleKeyDown = (event: KeyboardEvent) => {
-    if (event.key == "r") {
-      fractalX = 0;
-      fractalY = 0;
-      startFractalX = 0;
-      startFractalY = 0;
-      zoom = 2.0;
+    if (menuOpen === false) {
+      if (event.key === "r") {
+        fractalX = 0;
+        fractalY = 0;
+        startFractalX = 0;
+        startFractalY = 0;
+        zoom = 2.0;
+      }
     }
   };
 
   const changeZoom = (event: WheelEvent) => {
-    if (event.deltaY > 0) {
-      zoom = zoom * 1.05;
-    } else {
-      zoom = zoom * 0.95;
+    if (menuOpen === false) {
+      if (event.deltaY > 0) {
+        zoom = zoom * 1.05;
+      } else {
+        zoom = zoom * 0.95;
+      }
     }
   };
 
@@ -199,27 +221,58 @@
   };
 
   const handleMouseMove = (event: MouseEvent) => {
-    if (mouseDown) {
-      let diffX = event.pageX - startX;
-      let diffY = event.pageY - startY;
-      if (Math.abs(diffX) > delta || Math.abs(diffY) > delta) {
-        fractalX = startFractalX - (diffX / screen.width) * 2 * zoom;
-        fractalY = startFractalY + (diffY / screen.height) * zoom;
+    if (menuOpen === false) {
+      if (mouseDown) {
+        let diffX = event.pageX - startX;
+        let diffY = event.pageY - startY;
+        if (Math.abs(diffX) > delta || Math.abs(diffY) > delta) {
+          fractalX = startFractalX - (diffX / screen.width) * 2 * zoom;
+          fractalY = startFractalY + (diffY / screen.height) * zoom;
+        }
       }
     }
   };
 
-  const handleMouseDown = (event: MouseEvent) => {
-    if (event.buttons == 1) {
+  const handleTouchUp = (event: TouchEvent) => {
+    mouseDown = false;
+  };
+
+  const handleTouchMove = (event: TouchEvent) => {
+    if (menuOpen === false) {
+      if (mouseDown) {
+        let diffX = event.touches[0].clientX - startX;
+        let diffY = event.touches[0].clientY - startY;
+        if (Math.abs(diffX) > delta || Math.abs(diffY) > delta) {
+          fractalX = startFractalX - (diffX / screen.width) * zoom;
+          fractalY = startFractalY + (diffY / screen.height) * zoom;
+        }
+      }
+    }
+  };
+
+  const handleTouchDown = (event: TouchEvent) => {
+    if (menuOpen === false) {
       mouseDown = true;
-      startX = event.pageX;
-      startY = event.pageY;
+      startX = event.touches[0].clientX;
+      startY = event.touches[0].clientY;
       startFractalX = fractalX;
       startFractalY = fractalY;
     }
-    if (event.buttons == 2) {
-      event.preventDefault();
-      selectedFractal = (selectedFractal + 1) % 3;
+  };
+
+  const handleMouseDown = (event: MouseEvent) => {
+    if (menuOpen === false) {
+      if (event.buttons === 1) {
+        mouseDown = true;
+        startX = event.pageX;
+        startY = event.pageY;
+        startFractalX = fractalX;
+        startFractalY = fractalY;
+      }
+      if (event.buttons === 2) {
+        event.preventDefault();
+        selectedFractal = (selectedFractal + 1) % 3;
+      }
     }
   };
 
@@ -262,10 +315,10 @@
   }
 </script>
 
-<Toast />
-<Modal />
-
 <svelte:window
+  on:touchstart={handleTouchDown}
+  on:touchmove={handleTouchMove}
+  on:touchcancel={handleTouchUp}
   on:contextmenu={handleContextMenu}
   on:mouseup={handleMouseUp}
   on:mousedown={handleMouseDown}
