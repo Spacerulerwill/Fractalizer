@@ -13,21 +13,17 @@
 </script>
 
 <menu class="w-screen h-screen absolute bottom-0 select-none flex">
-  <nav
-    class="bg-white bg-opacity-20 rounded-lg h-fit w-fit p-8 font-semibold h3"
-  >
+  <nav class="variant-ghost-secondary h-fit w-fit m-6 p-4 font-semibold h3">
     <a
       href="https://github.com/Spacerulerwill/Fractalizer"
       class="h1 hover:animate-pulse"
     >
       <span class="gradient-heading">Fractilizer</span>
     </a>
-    <p class="gradient-heading pb-1">{Fractals[selectedFractal]}</p>
     <p class="gradient-heading pb-1">Zoom: {(1.0 / zoom).toPrecision(2)}</p>
     <p class="gradient-heading pb-1">X: {fractalX.toPrecision(2)}</p>
     <p class="gradient-heading pb-1">Y: {fractalY.toPrecision(2)}</p>
-    <Dropdown {selectedFractal} {changeFractal} />
-    <span class="mt-2 flex gap-4">
+    <span class="my-1 flex gap-4">
       <svg
         on:click={saveImage}
         class="w-10"
@@ -68,5 +64,6 @@
         />
       </svg>
     </span>
+    <Dropdown {selectedFractal} {changeFractal} />
   </nav>
 </menu>

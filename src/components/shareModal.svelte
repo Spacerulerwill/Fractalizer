@@ -35,7 +35,8 @@
     </div>
     <button
       on:click={() => {
-        modalStore.clear();
+        $modalStore[0].meta.closeFunction();
+        modalStore.close();
       }}
       class="self-end bg-slate-900 p-2 rounded-md text-lg">Close</button
     >
