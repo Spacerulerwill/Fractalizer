@@ -8,7 +8,9 @@ export const vertexShaderSource = `
 export const fragmentShaderSource = `precision mediump float;
 uniform ivec2 resolution;
 uniform vec2 location;
+uniform vec2 mousePos;
 uniform int fractalType;
+uniform bool isJuliaModeEnabled;
 const int iterations = 200;
 uniform float zoom;
 
@@ -44,11 +46,22 @@ int fractal(vec2 offset) {
     float ratio = float(resolution.x) / float(resolution.y);
     uv.x *= ratio;
     uv -= vec2(0.5 * ratio, 0.5);
-    uv *= zoom; //zoom
-    uv += location; // position
+
+    if (isJuliaModeEnabled) {
+        uv *= 2.0; // default zoom level
+    } else {
+        uv *= zoom; //zoom
+        uv += location; // position
+    }
     uv.y *= -1.0;
 
     vec2 z = vec2(0.0);
+
+    if (isJuliaModeEnabled) {
+        z = uv;
+        uv = mousePos;
+    }
+
     //calculate iterationts until it escapes
     for (int iters = 0; iters < iterations; ++iters)
     {
@@ -66,5 +79,6 @@ void main() {
     fragColor += vec3(float(fractal(vec2(0.5,0.5))) / float(iterations));
     fragColor /= 4.0;
     gl_FragColor = vec4(fragColor, 1.0);
+
 }
-`;
+`
