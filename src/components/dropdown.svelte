@@ -25,16 +25,18 @@
   on:click={() => {
     menuOpen = !menuOpen;
   }}
-  class="w-max h-max bg-white text-black p-2 outline-blue-500 outline"
+  class="w-fit px-1 h-max bg-white text-black outline-blue-500 outline"
 >
   <p class="p h5">
     {menuOpen == false ? Fractals[selectedFractal] : "Select fractal"}
   </p>
 
-  <ul class="{menuOpen ? 'block' : 'hidden'} bg-white outline outline-blue-500">
+  <ul class="{menuOpen ? 'block' : 'hidden'} bg-white relative h5 bottom-0">
     {#each { length: fractalCount } as _, index (index)}
       <option
-        class={selectedFractal === index ? "variant-ghost-secondary" : null}
+        class="{selectedFractal === index
+          ? 'variant-ghost-secondary'
+          : null} px-1"
         value={index}
         on:click={() => changeFractal(index)}
       >
