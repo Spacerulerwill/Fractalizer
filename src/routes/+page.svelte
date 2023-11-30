@@ -204,8 +204,10 @@
                 startFractalY = 0;
                 zoom = 2.0;
             }
+            break;
         case 'j':
             juliaSetModeEnabled = !juliaSetModeEnabled;
+            break;
     }
   };
 
