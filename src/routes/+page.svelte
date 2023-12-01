@@ -26,6 +26,8 @@
   const delta = 6;
   let startX: number;
   let startY: number;
+  let startX2: number;
+  let startY2: number;
   let startFractalX: number;
   let startFractalY: number;
 
@@ -230,43 +232,55 @@
   };
 
   const handleMouseMove = (event: MouseEvent) => {
+    event.preventDefault();
     if (juliaSetModeEnabled) {
-        mouseReal = event.pageX * ((maxReal - minReal) / windowWidth) + minReal;
-        mouseImag = event.pageY * ((maxImag - minImag) / windowHeight)+ minImag;
+      mouseReal = event.pageX * ((maxReal - minReal) / windowWidth) + minReal;
+      mouseImag = event.pageY * ((maxImag - minImag) / windowHeight) + minImag;
     } else if (mouseDown && menuOpen === false) {
-        let diffX = event.pageX - startX;
-        let diffY = event.pageY - startY;
-        if (Math.abs(diffX) > delta || Math.abs(diffY) > delta) {
-            fractalX = startFractalX - (diffX / screen.width) * 2 * zoom;
-            fractalY = startFractalY + (diffY / screen.height) * zoom;
-        }
+      let diffX = event.pageX - startX;
+      let diffY = event.pageY - startY;
+      if (Math.abs(diffX) > delta || Math.abs(diffY) > delta) {
+        fractalX = startFractalX - (diffX / screen.width) * 2 * zoom;
+        fractalY = startFractalY + (diffY / screen.height) * zoom;
+      }
     }
-  };
-
-  const handleTouchUp = (event: TouchEvent) => {
-    mouseDown = false;
   };
 
   const handleTouchMove = (event: TouchEvent) => {
     if (menuOpen === false) {
-      if (mouseDown) {
+      if (event.touches.length === 1) {
         let diffX = event.touches[0].clientX - startX;
         let diffY = event.touches[0].clientY - startY;
         if (Math.abs(diffX) > delta || Math.abs(diffY) > delta) {
           fractalX = startFractalX - (diffX / screen.width) * zoom;
           fractalY = startFractalY + (diffY / screen.height) * zoom;
         }
+      } else if (event.touches.length === 2) {
+        let diffX = event.touches[0].clientX - startX;
+        let diffY = event.touches[0].clientY - startY;
+        let diffX2 = event.touches[1].clientX - startX2;
+        let diffY2 = event.touches[1].clientY - startY2;
       }
     }
   };
 
+  //plan for pinch is to get distance between two fingers on press down
+  //then see if that distance gets greater or bigger when movement is detected
+  //bigger distance = zoom in, smaller distance = zoom out
+
   const handleTouchDown = (event: TouchEvent) => {
     if (menuOpen === false) {
-      mouseDown = true;
-      startX = event.touches[0].clientX;
-      startY = event.touches[0].clientY;
-      startFractalX = fractalX;
-      startFractalY = fractalY;
+      if (event.touches.length === 1) {
+        startX = event.touches[0].clientX;
+        startY = event.touches[0].clientY;
+        startFractalX = fractalX;
+        startFractalY = fractalY;
+      } else if (event.touches.length === 2) {
+        startX = event.touches[0].clientX;
+        startY = event.touches[0].clientY;
+        startX2 = event.touches[1].clientX;
+        startY2 = event.touches[1].clientY;
+      }
     }
   };
 
@@ -299,10 +313,13 @@
   $: {
     if (programInfo && programInfo.gl && canvas.width && canvas.height) {
       programInfo.gl.uniform2f(programInfo.locationLoc, fractalX, fractalY);
-      programInfo.gl.uniform2f(programInfo.mousePosLoc, mouseReal, mouseImag)
+      programInfo.gl.uniform2f(programInfo.mousePosLoc, mouseReal, mouseImag);
       programInfo.gl.uniform1f(programInfo.zoomLoc, zoom);
       programInfo.gl.uniform1i(programInfo.fractalTypeLoc, selectedFractal);
-      programInfo.gl.uniform1i(programInfo.juliaSetModeEnabledLoc, juliaSetModeEnabled ? 1 : 0)
+      programInfo.gl.uniform1i(
+        programInfo.juliaSetModeEnabledLoc,
+        juliaSetModeEnabled ? 1 : 0
+      );
       programInfo.gl.drawArrays(programInfo.gl.TRIANGLES, 0, 6);
     }
   }
@@ -323,10 +340,10 @@
         windowHeight
       );
 
-      minReal = (-0.5 * zoom) + fractalX
-	  maxReal = (0.5 * zoom) + fractalX;
-	  minImag = (-0.5 * zoom) - fractalY;
-	  maxImag = (0.5 * zoom) - fractalY;
+      minReal = -0.5 * zoom + fractalX;
+      maxReal = 0.5 * zoom + fractalX;
+      minImag = -0.5 * zoom - fractalY;
+      maxImag = 0.5 * zoom - fractalY;
 
       programInfo.gl.drawArrays(programInfo.gl.TRIANGLES, 0, 6); // Redraw the scene this works on page load because the resolutionLoc changes post mount after all is rendered
     }
@@ -334,17 +351,16 @@
 </script>
 
 <svelte:window
-  on:touchstart={handleTouchDown}
-  on:touchmove={handleTouchMove}
-  on:touchcancel={handleTouchUp}
-  on:contextmenu={handleContextMenu}
-  on:mouseup={handleMouseUp}
-  on:mousedown={handleMouseDown}
-  on:mousemove={handleMouseMove}
+  on:touchstart|preventDefault={handleTouchDown}
+  on:touchmove|preventDefault={handleTouchMove}
+  on:contextmenu|preventDefault={handleContextMenu}
+  on:mouseup|preventDefault={handleMouseUp}
+  on:mousedown|preventDefault={handleMouseDown}
+  on:mousemove|preventDefault={handleMouseMove}
+  on:keydown={handleKeyDown}
+  on:wheel|passive|preventDefault={changeZoom}
   bind:innerWidth={windowWidth}
   bind:innerHeight={windowHeight}
-  on:wheel={changeZoom}
-  on:keydown={handleKeyDown}
 />
 
 <canvas bind:this={canvas} />
