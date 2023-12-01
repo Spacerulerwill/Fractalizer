@@ -7,7 +7,6 @@
   let fractalCount = FractalCount;
 
   const handleKeyDown = (event: KeyboardEvent) => {
-    console.log(event.key);
     if (event.key == "ArrowDown") {
       changeFractal((selectedFractal + 1) % 3);
     } else if (event.key == "ArrowUp") {

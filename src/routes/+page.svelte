@@ -20,6 +20,7 @@
 
   let programInfo: ProgramInfo;
   let canvas: HTMLCanvasElement;
+
   // Mouse movement data
   let mouseDown = false;
   const delta = 6;
@@ -33,18 +34,21 @@
   //window related
   let windowWidth: number;
   let windowHeight: number;
+  let maxReal: number;
+  let minReal: number;
+  let maxImag: number;
+  let minImag: number;
 
   // fractal stats
   let fractalX: number;
   let fractalY: number;
+  let mouseReal = 0;
+  let mouseImag = 0;
   let zoom: number;
   let selectedFractal: Fractals;
+  let juliaSetModeEnabled = $page.url.searchParams.has("julia");
 
   let menuOpen = false;
-
-  $: {
-    console.log(menuOpen);
-  }
 
   // TODO: Can probably make a generic function for this...
   // url parameter parsing
@@ -193,14 +197,17 @@
   };
 
   const handleKeyDown = (event: KeyboardEvent) => {
-    if (menuOpen === false) {
-      if (event.key === "r") {
-        fractalX = 0;
-        fractalY = 0;
-        startFractalX = 0;
-        startFractalY = 0;
-        zoom = 2.0;
-      }
+    switch (event.key) {
+      case "r":
+        if (menuOpen === false) {
+          fractalX = 0;
+          fractalY = 0;
+          startFractalX = 0;
+          startFractalY = 0;
+          zoom = 2.0;
+        }
+      case "j":
+        juliaSetModeEnabled = !juliaSetModeEnabled;
     }
   };
 
@@ -224,14 +231,15 @@
 
   const handleMouseMove = (event: MouseEvent) => {
     event.preventDefault();
-    if (menuOpen === false) {
-      if (mouseDown) {
-        let diffX = event.pageX - startX;
-        let diffY = event.pageY - startY;
-        if (Math.abs(diffX) > delta || Math.abs(diffY) > delta) {
-          fractalX = startFractalX - (diffX / screen.width) * 2 * zoom;
-          fractalY = startFractalY + (diffY / screen.height) * zoom;
-        }
+    if (juliaSetModeEnabled) {
+      mouseReal = event.pageX * ((maxReal - minReal) / windowWidth) + minReal;
+      mouseImag = event.pageY * ((maxImag - minImag) / windowHeight) + minImag;
+    } else if (mouseDown && menuOpen === false) {
+      let diffX = event.pageX - startX;
+      let diffY = event.pageY - startY;
+      if (Math.abs(diffX) > delta || Math.abs(diffY) > delta) {
+        fractalX = startFractalX - (diffX / screen.width) * 2 * zoom;
+        fractalY = startFractalY + (diffY / screen.height) * zoom;
       }
     }
   };
@@ -285,7 +293,7 @@
       }
       if (event.buttons === 2) {
         event.preventDefault();
-        selectedFractal = (selectedFractal + 1) % 3;
+        selectedFractal = (selectedFractal + 1) % FractalCount;
       }
     }
   };
@@ -303,8 +311,13 @@
   $: {
     if (programInfo && programInfo.gl && canvas.width && canvas.height) {
       programInfo.gl.uniform2f(programInfo.locationLoc, fractalX, fractalY);
+      programInfo.gl.uniform2f(programInfo.mousePosLoc, mouseReal, mouseImag);
       programInfo.gl.uniform1f(programInfo.zoomLoc, zoom);
       programInfo.gl.uniform1i(programInfo.fractalTypeLoc, selectedFractal);
+      programInfo.gl.uniform1i(
+        programInfo.juliaSetModeEnabledLoc,
+        juliaSetModeEnabled ? 1 : 0
+      );
       programInfo.gl.drawArrays(programInfo.gl.TRIANGLES, 0, 6);
     }
   }
@@ -324,6 +337,12 @@
         windowWidth,
         windowHeight
       );
+
+      minReal = -0.5 * zoom + fractalX;
+      maxReal = 0.5 * zoom + fractalX;
+      minImag = -0.5 * zoom - fractalY;
+      maxImag = 0.5 * zoom - fractalY;
+
       programInfo.gl.drawArrays(programInfo.gl.TRIANGLES, 0, 6); // Redraw the scene this works on page load because the resolutionLoc changes post mount after all is rendered
     }
   }

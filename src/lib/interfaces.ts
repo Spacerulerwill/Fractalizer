@@ -3,7 +3,9 @@ export interface ProgramInfo {
     zoomLoc: WebGLUniformLocation | null;
     resolutionLoc: WebGLUniformLocation | null;
     locationLoc: WebGLUniformLocation | null;
+    mousePosLoc: WebGLUniformLocation | null;
     fractalTypeLoc: WebGLUniformLocation | null;
+    juliaSetModeEnabledLoc :WebGLUniformLocation | null;
 }
   
 export enum Fractals { 
