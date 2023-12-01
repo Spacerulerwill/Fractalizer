@@ -198,16 +198,18 @@
 
   const handleKeyDown = (event: KeyboardEvent) => {
     switch (event.key) {
-      case "r":
-        if (menuOpen === false) {
-          fractalX = 0;
-          fractalY = 0;
-          startFractalX = 0;
-          startFractalY = 0;
-          zoom = 2.0;
-        }
-      case "j":
-        juliaSetModeEnabled = !juliaSetModeEnabled;
+        case 'r':
+            if (menuOpen === false) {
+                fractalX = 0;
+                fractalY = 0;
+                startFractalX = 0;
+                startFractalY = 0;
+                zoom = 2.0;
+            }
+            break;
+        case 'j':
+            juliaSetModeEnabled = !juliaSetModeEnabled;
+            break;
     }
   };
 
