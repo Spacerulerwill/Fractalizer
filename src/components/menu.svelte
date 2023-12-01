@@ -12,7 +12,7 @@
   export let shareFractal: () => void;
 </script>
 
-<menu class="w-screen h-screen absolute bottom-0 select-none flex">
+<menu class="w-screen h-[100svh] absolute bottom-0 select-none flex">
   <nav class="variant-ghost-secondary h-fit w-fit m-6 p-4 font-semibold h3">
     <a
       href="https://github.com/Spacerulerwill/Fractalizer"
