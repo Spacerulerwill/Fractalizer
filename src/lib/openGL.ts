@@ -9,7 +9,7 @@ type InitFunction = (
 ) => ProgramInfo;
 
 export const initialiseWebGL: InitFunction = (canvas,vertexShaderSource,fragmentShaderSource,vertexData) => { 
-  const gl = canvas.getContext("webgl");
+  const gl = canvas.getContext("webgl2");
   if (!gl) {
     throw("no gl instance found")
   }
@@ -27,30 +27,29 @@ export const initialiseWebGL: InitFunction = (canvas,vertexShaderSource,fragment
   if (!program) {
   throw("no gl instance found")
   }
-  const positionBuffer = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-  gl.bufferData(
-    gl.ARRAY_BUFFER,
-    new Float32Array(vertexData),
-    gl.STATIC_DRAW
-  );
 
   gl.shaderSource(vertexShader, vertexShaderSource);
   gl.compileShader(vertexShader);
 
+  let success = gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS);
+  if (!success) {
+    throw "Could not compile vertex shader:" + gl.getShaderInfoLog(vertexShader);
+  }
+
   gl.shaderSource(fragmentShader, fragmentShaderSource);
   gl.compileShader(fragmentShader);
+
+  success = gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS);
+  if (!success) {
+    throw "Could not compile fragment shader:" + gl.getShaderInfoLog(fragmentShader);
+  }
 
   gl.attachShader(program, vertexShader);
   gl.attachShader(program, fragmentShader);
 
   gl.linkProgram(program);
-
-  const positionLocation = gl.getAttribLocation(program, `position`);
-  gl.enableVertexAttribArray(positionLocation);
-  gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-  gl.vertexAttribPointer(positionLocation, 3, gl.FLOAT, false, 0, 0);
   gl.useProgram(program);
+  
   const resolutionLoc = gl.getUniformLocation(program, "resolution");
   const locationLoc = gl.getUniformLocation(program, "location");
   const mousePosLoc = gl.getUniformLocation(program, "mousePos")
