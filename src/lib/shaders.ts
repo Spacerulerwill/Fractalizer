@@ -1,11 +1,23 @@
-export const vertexShaderSource = `
-  attribute vec3 position;
-  void main() {
-    gl_Position = vec4(position, 1.0);
-  }
+export const vertexShaderSource = `#version 300 es
+
+vec2 vertices[6] = vec2[6](
+	vec2(-1.0, -1.0),
+	vec2(1.0, 1.0),
+	vec2(1.0, -1.0),
+	vec2(-1.0, -1.0),
+	vec2(1.0, 1.0),
+	vec2(-1.0, 1.0)
+);
+
+void main() {
+gl_Position = vec4(vertices[gl_VertexID], 0.0, 1.0);
+}
 `;
 
-export const fragmentShaderSource = `precision mediump float;
+export const fragmentShaderSource = `#version 300 es
+
+precision highp float;
+
 uniform ivec2 resolution;
 uniform vec2 location;
 uniform vec2 mousePos;
@@ -13,6 +25,8 @@ uniform int fractalType;
 uniform bool isJuliaModeEnabled;
 const int iterations = 200;
 uniform float zoom;
+
+out vec4 FragColor;
 
 const int mandelbrot = 0;
 const int burningship = 1;
@@ -78,7 +92,7 @@ void main() {
     fragColor += vec3(float(fractal(vec2(0,0.5))) / float(iterations));
     fragColor += vec3(float(fractal(vec2(0.5,0.5))) / float(iterations));
     fragColor /= 4.0;
-    gl_FragColor = vec4(fragColor, 1.0);
+    FragColor = vec4(fragColor, 1.0);
 
 }
 `
